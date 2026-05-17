@@ -65,3 +65,44 @@ Antes de ejecutar la demo, asegúrate de conectar el módulo PCA9685 de la sigui
    * **Canal 0:** Un LED. En la demo se encenderá al 100% de brillo (prueba de *Full ON / Full OFF*).
    * **Canal 1:** Un LED. En la demo se encenderá de forma tenue al 25% de brillo (prueba de control por porcentaje / *Duty Cycle*).
    * **Canal 15:** Un Servomotor (ej. SG90). En la demo se moverá secuencialmente a 0°, 90° y 180° (prueba de capa matemática).
+
+---
+
+## 🧪 Pruebas Automatizadas (Testing)
+
+El proyecto cuenta con una suite de pruebas dividida en dos niveles para garantizar la máxima calidad y fiabilidad del driver. Utilizamos **Python** (a través de `pytest` y `ctypes`) como orquestador para testear directamente nuestra librería compilada en C.
+
+### ¿Qué se está comprobando?
+
+1. **Tests Unitarios (Lógica sin hardware)**:
+   Verifican que la matemática interna del driver (ej. cálculo del prescaler de frecuencia y conversión de porcentajes de *Duty Cycle* a ticks exactos) se resuelva con precisión y no haya regresiones en el código fuente. Se compila un "Mock" de I2C (`libpca9685_mock.so`) que intercepta las llamadas y guarda los bytes en una memoria virtual (RAM) en lugar de intentar escribirlos en un bus I2C físico.
+
+2. **Tests de Integración (Hardware real)**:
+   Verifican que el hardware físico (PCA9685) reaccione como es esperado. Utilizando la librería real en la Raspberry Pi, se envían comandos I2C al chip y se auditan externamente usando un paquete independiente de Python (`smbus2`) para certificar físicamente los valores (*Caja Blanca + Caja Negra*).
+   La suite actual ejecuta **7 pruebas granulares y atómicas**, cada una reinicializando el chip en un entorno limpio (*Setup & Teardown*):
+   * `test_set_pwm_freq`: Valida la escritura del prescaler en hardware.
+   * `test_channel_readback_integrity`: Validación cruzada de lectura de canales (C vs smbus2).
+   * `test_duty_cycle`: Valida que los porcentajes se traduzcan en ticks físicos reales.
+   * `test_full_on` / `test_full_off`: Comprueba la inyección de banderas (flags) en los registros HIGH.
+   * `test_set_all_channels`: Emisión de broadcast a todos los canales simultáneamente.
+   * `test_close`: Verifica el apagado de seguridad general y la liberación de memoria.
+
+### Cómo correr los tests
+
+**⚠️ PRECAUCIÓN MECÁNICA:** *Para los Tests de Integración se recomienda enfáticamente realizar un "Dry Run" (desconectar todos los motores, servos o actuadores mecánicos de los pines PWM del PCA9685). Esto previene que los motores reciban ráfagas de frecuencias no deseadas que los puedan atascar o dañar físicamente durante los reinicios.*
+
+1. **Instalar entorno Python:**
+   En tu Raspberry Pi (o PC local si solo correrás los unitarios), instala las dependencias necesarias:
+   ```bash
+   pip install -r tests/requirements.txt
+   ```
+2. **Compilar las librerías dinámicas:**
+   Genera los archivos `.so` requeridos por Python (tanto el mock como el driver real) ejecutando:
+   ```bash
+   make test-lib
+   ```
+3. **Ejecutar Suite Completa:**
+   ```bash
+   pytest tests/ -v
+   ```
+   *(Nota: Los tests de integración se saltarán automáticamente -Skip- si el framework detecta que estás corriendo en Windows o sin un bus físico `/dev/i2c-1` disponible, protegiendo así la ejecución).*

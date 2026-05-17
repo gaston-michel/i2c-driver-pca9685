@@ -14,7 +14,8 @@ typedef enum {
     PCA_ERR_INVALID_CHANNEL = -2,  /**< Canal seleccionado fuera de rango (debe ser 0-15) */
     PCA_ERR_INVALID_VALUE = -3,    /**< Valor de ticks fuera de rango (debe ser 0-4095) */
     PCA_ERR_INVALID_FREQ = -4,     /**< Frecuencia de PWM fuera de límites (24Hz a 1526Hz) */
-    PCA_ERR_NOT_INITIALIZED = -5   /**< Intento de uso sin inicializar el dispositivo */
+    PCA_ERR_NOT_INITIALIZED = -5,  /**< Intento de uso sin inicializar el dispositivo */
+    PCA_ERR_INVALID_PARAM = -6     /**< Parámetro inválido (ej. puntero nulo) */
 } pca_status_t;
 
 /**

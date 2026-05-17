@@ -1,6 +1,16 @@
-/docs
-/examples
-/include
-/Makefile
-/proyecto_driver_i_2_c_pca_9685_user_space.md
-/src
+# Build artifacts
+*.o
+*.a
+*.so
+*.out
+*.exe
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Editor/OS files
+.vscode/
+.DS_Store
